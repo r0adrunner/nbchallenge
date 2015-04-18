@@ -1,7 +1,9 @@
 (ns nbgraph.core
-  (:gen-class))
+  (:require [nbgraph.initdb :refer :all]))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Main function. Call it with args 'initdb' to initialize the
+   example graph"
   [& args]
-  (println "Hello, World!"))
+  (when (= (first args) "initdb")
+    (init-example-db)))

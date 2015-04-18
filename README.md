@@ -1,36 +1,38 @@
-# nbgraph
+# NBGraph
 
-FIXME: description
+NB Challenge
 
-## Installation
+## Requisites
 
-Download from http://example.com/FIXME.
+* Leiningen 2
+
+* Java 1.7+
+
+* MongoDB
+
+MongoDB Should be up on localhost on default port (27017)
 
 ## Usage
 
-FIXME: explanation
+First, you should download any dependencies
 
-    $ java -jar nbgraph-0.1.0-standalone.jar [args]
+    $ lein deps
 
-## Options
+Then, you should initialize the example database with:
 
-FIXME: listing of options this app accepts.
+    $ lein run initdb
 
-## Examples
+To run tests
 
-...
+    $ lein test
 
-### Bugs
+Run with
 
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+    $ lein run
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2015 Victor Moreira
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
