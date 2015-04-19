@@ -1,6 +1,6 @@
 (ns nbgraph.model.graphmodel-test
   (:require [clojure.test :refer :all]
-            [nbgraph.dbutils.mongodbconfig :refer :all]
+            [nbgraph.model.dbutils.mongodbconfig :refer :all]
             [nbgraph.model.mongograph :refer :all]
             [nbgraph.model.graphmodel :refer :all])
   (:import [nbgraph.model.mongograph MongoGraph]))

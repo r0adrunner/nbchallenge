@@ -1,6 +1,6 @@
 (ns nbgraph.model.mongograph-test
   (:require [clojure.test :refer :all]
-            [nbgraph.dbutils.mongodbconfig :refer :all]
+            [nbgraph.model.dbutils.mongodbconfig :refer :all]
             [nbgraph.model.mongograph :refer :all]
             [monger.collection :as mc]))
 

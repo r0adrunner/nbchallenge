@@ -1,4 +1,4 @@
-(ns nbgraph.dbutils.mongodbconfig
+(ns nbgraph.model.dbutils.mongodbconfig
   (:require [monger core]))
 
 (defonce connected (atom false))
