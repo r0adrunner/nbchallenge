@@ -18,14 +18,14 @@
   (get-nodes [this]
     (set (map #(:id %)
               (mc/find-maps
-               (nodes-collection-ext-name this)
+               (nodes-collection-ext-name graph-name)
                {:id {"$exists" true}}))))
 
   (create-node-if-not-exists! [this node]
     ;; Don't do anything if node already exists
     (when-not (node-exists? this node)
       (mc/insert
-       (nodes-collection-ext-name this)
+       (nodes-collection-ext-name graph-name)
        {:id node :is-updated-in-distance-matrix false})
       ;; Adding one node changes the scores of all others
       (set-scores-updated-status this false)
@@ -39,12 +39,12 @@
     ;; and change the need to update in distance
     ;; matrix status
     (mc/update
-     (nodes-collection-ext-name this)
+     (nodes-collection-ext-name graph-name)
      {:id node1}
      {"$addToSet" {:neighbors node2}
       "$set" {:is-updated-in-distance-matrix false}})
     (mc/update
-     (nodes-collection-ext-name this)
+     (nodes-collection-ext-name graph-name)
      {:id node2}
      {"$addToSet" {:neighbors node1}
       "$set" {:is-updated-in-distance-matrix false}})
@@ -56,14 +56,14 @@
     (set
      (:neighbors
       (mc/find-one-as-map
-       (nodes-collection-ext-name this)
+       (nodes-collection-ext-name graph-name)
        {:id node}))))
 
   (closeness [this node]
     (update-scores this)
     (:closeness
      (mc/find-one-as-map
-      (nodes-collection-ext-name this)
+      (nodes-collection-ext-name graph-name)
       {:id node})))
 
   (get-nodes-ranked
@@ -71,31 +71,31 @@
     (update-scores this)
     (vec
      (map #(:id %)
-          (mq/with-collection (nodes-collection-ext-name this)
+          (mq/with-collection (nodes-collection-ext-name graph-name)
             (mq/find {:id {"$exists" true}})
             (mq/sort { rank-type -1})
             (mq/limit limit))))))
 
 ;;; DB collection names ==============================================
 
-(defn- nodes-collection-ext-name [g]
-  (str "nodes-" (:graph-name g)))
+(defn- nodes-collection-ext-name [graph-name]
+  (str "nodes-" graph-name))
 
-(defn- distance-matrix-collection-ext-name [g]
-  (str "distances-" (:graph-name g)))
+(defn- distance-matrix-collection-ext-name [graph-name]
+  (str "distances-" graph-name))
 
 ;;; Auxiliary functions ==============================================
 
 (defn- are-scores-updated? [g]
   (if-let [info-record
            (mc/find-one-as-map
-            (nodes-collection-ext-name g)
+            (nodes-collection-ext-name (:graph-name g))
             {:info true})]
     (true? (:are-scores-updated? info-record))
     false))
 
 (defn- set-scores-updated-status [g status]
-  (mc/update (nodes-collection-ext-name g)
+  (mc/update (nodes-collection-ext-name (:graph-name g))
              {:info true}
              {"$set" {:are-scores-updated? (true? status)}}
              :upsert true))
@@ -103,13 +103,13 @@
 (defn- is-distance-matrix-updated? [g]
   (if-let [info-record
            (mc/find-one-as-map
-            (distance-matrix-collection-ext-name g)
+            (distance-matrix-collection-ext-name (:graph-name g))
             {:info true})]
     (true? (:is-matrix-updated? info-record))
     false))
 
 (defn- set-distance-matrix-updated-status [g status]
-  (mc/update (distance-matrix-collection-ext-name g)
+  (mc/update (distance-matrix-collection-ext-name (:graph-name g))
              {:info true}
              {"$set" {:is-matrix-updated? (true? status)}}
              :upsert true))
@@ -118,17 +118,17 @@
   (doall
    (map
     #(do 
-       (mc/update (distance-matrix-collection-ext-name g)
+       (mc/update (distance-matrix-collection-ext-name (:graph-name g))
                   {:to (:node %) :from node}
                   {"$set" {:distance (:distance %)}}
                   :upsert true)
-       (mc/update (distance-matrix-collection-ext-name g)
+       (mc/update (distance-matrix-collection-ext-name (:graph-name g))
                   {:from (:node %) :to node}
                   {"$set" {:distance (:distance %)}}
                   :upsert true))
     (breadth-first-search g node)))
   ;; Mark as registered
-  (mc/update (nodes-collection-ext-name g)
+  (mc/update (nodes-collection-ext-name (:graph-name g))
              {:id node}
              {"$set" {:is-updated-in-distance-matrix true}}
              :upsert false))
@@ -138,7 +138,7 @@
     (doall
      (map  #(update-node-in-distance-matrix g (:id %))
            (mc/find-maps
-            (nodes-collection-ext-name g)
+            (nodes-collection-ext-name (:graph-name g))
             {:is-updated-in-distance-matrix false})))
     ;; Mark as updated
     (set-distance-matrix-updated-status g true)))
@@ -146,11 +146,11 @@
 (defn- distances-from [g node]
   (map #(:distance %)
        (mc/find-maps
-        (distance-matrix-collection-ext-name g)
+        (distance-matrix-collection-ext-name (:graph-name g))
         {:from node})))
 
 (defn- update-closeness [g node closeness]
-  (mc/update (nodes-collection-ext-name g)
+  (mc/update (nodes-collection-ext-name (:graph-name g))
              {:id node}
              {"$set" {:closeness closeness}}
              :upsert false))
@@ -170,7 +170,7 @@
 
 (defn node-exists? [g node]
   (mc/find-one
-   (nodes-collection-ext-name g)
+   (nodes-collection-ext-name (:graph-name g))
    {:id node}))
 
 ;;; Graph object ==============================================
@@ -179,19 +179,27 @@
   "Deletes the collections on the database related to g"
   [g]
   (mc/drop
-   (nodes-collection-ext-name g))
+   (nodes-collection-ext-name (:graph-name g)))
   (mc/drop
-   (distance-matrix-collection-ext-name g)))
+   (distance-matrix-collection-ext-name (:graph-name g))))
 
 (defn create-graph!
   "Returns a graph object with given name"
   [graph-name]
   (let [g (MongoGraph. graph-name)]
     ;; Node ID should be unique
-    (mc/ensure-index (nodes-collection-ext-name g)
+    (mc/ensure-index (nodes-collection-ext-name (:graph-name g))
                      (array-map :id 1) { :unique true })
     ;; Index the distance matrix for better performance
-    (mc/ensure-index (distance-matrix-collection-ext-name g)
+    (mc/ensure-index (distance-matrix-collection-ext-name (:graph-name g))
                      (array-map :from 1))
     g))
 
+(defn graph-exists? [graph-name]
+  (and (mc/exists? (distance-matrix-collection-ext-name graph-name))
+       (mc/exists? (nodes-collection-ext-name graph-name))))
+
+(defn load-graph! [graph-name]
+  (if (graph-exists? graph-name)
+    (MongoGraph. graph-name)
+    (throw (Exception. (str "Graph " graph-name " does not exists yet")))))

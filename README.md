@@ -18,17 +18,15 @@ First, you should download any dependencies
 
     $ lein deps
 
-Then, you should initialize the example database with:
-
-    $ lein run initdb
-
 To run tests
 
     $ lein test
 
 Run with
 
-    $ lein run
+    $ lein ring server
+
+The app should be accessible on http://localhost:3000/
 
 ## License
 
