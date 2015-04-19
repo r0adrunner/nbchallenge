@@ -7,13 +7,23 @@
 
 (defroutes main-routes
   (GET "/" [] "Server up")
+  (GET "/nodes" [] (graphcontroller/all-nodes))
+  (GET "/nodes/rank-by/:rank/limit/:limit" [rank limit]
+       (graphcontroller/all-nodes rank (Integer. limit)))
+  (POST "/edge" {nodes :params}
+        (graphcontroller/add-edge (:node1 nodes) (:node2 nodes)))
   (route/resources "/")
   (route/not-found "Page not found"))
 
 (def app
   (-> main-routes
-      (wrap-defaults site-defaults)
-      (middleware/wrap-json-body)
+      (wrap-defaults
+       ;; Using no anti-forgery tokens while testing
+       ;; TODO: Use it
+       (assoc-in site-defaults [:security :anti-forgery] false)
+       ;; site-defaults
+       )
+      (middleware/wrap-json-params)
       (middleware/wrap-json-response)))
 
 ;;; Init function for the server =============================================
@@ -21,4 +31,4 @@
 (defn init
   []
   (println "Initializing server...")
-  (graphcontroller/init-example-graph-if-not-already))
+  (graphcontroller/init-example-graph-if-not-already :production))

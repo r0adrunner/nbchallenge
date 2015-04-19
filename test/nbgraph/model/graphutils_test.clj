@@ -9,12 +9,18 @@
 
 (def mongo-graph-name "graphutils-test")
 
-(deftest breadth-first-search-test
+(defn- startup []
   (def g (create-graph! mongo-graph-name))
   (create-edge! g "2" "1")
   (create-edge! g "3" "1")
   (create-edge! g "4" "2")
-  (create-edge! g "2" "5")
+  (create-edge! g "2" "5"))
+
+(defn- teardown []
+  (delete-graph! g))
+
+(deftest breadth-first-search-test
+  (startup)
 
   (is (= #{{:node "1" :distance 1}
            {:node "2" :distance 0}
@@ -23,4 +29,4 @@
            {:node "5" :distance 1}}
          (set (breadth-first-search g "2"))))
 
-  (delete-graph! g))
+  (teardown))

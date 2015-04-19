@@ -31,6 +31,9 @@
     (create-node-if-not-exists! @g "1")
     (is (= (get-nodes @g) #{"1"})))
 
+  (testing "Check if node exists"
+    (is (node-exists? @g "1")))
+
   (testing "Edges and neighbors test"
     (create-edge! @g "2" "1")
     (create-edge! @g "3" "1")
@@ -43,6 +46,18 @@
     (is (= (closeness @g "2") 0.2))
     (is (= (closeness @g "5") 0.125)))
 
+  (testing "Nodes details test"
+    (is (= #{
+             {:closeness 0.125, :neighbors #{"2"}, :id "4"}
+             {:closeness 0.1111111111111111, :neighbors #{"1"}, :id "3"}
+             {:closeness 0.125, :neighbors #{"2"}, :id "5"}
+             {:closeness 0.1666666666666667, :neighbors #{"2" "3"}, :id "1"}
+             {:closeness 0.2, :neighbors #{"5" "4" "1"}, :id "2"}}
+           (get-all-nodes-details @g))))
+
   (testing "Rank test"
-    (is (= ["2" "1" "4" "5" "3"] (get-nodes-ranked @g :closeness 5)))))
+    (is (= [{:closeness 0.2, :neighbors #{"4" "1" "5"}, :id "2"}
+            {:closeness 0.1666666666666667, :neighbors #{"2" "3"}, :id "1"}
+            {:closeness 0.125, :neighbors #{"2"}, :id "4"}]
+           (get-all-nodes-details-ranked @g :closeness 3)))))
 

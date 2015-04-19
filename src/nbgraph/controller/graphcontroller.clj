@@ -1,5 +1,6 @@
 (ns nbgraph.controller.graphcontroller
   (:require [nbgraph.model.dbutils.mongodbconfig :refer :all]
+            [ring.util.response :refer :all]
             [nbgraph.model.mongograph :refer :all]
             [nbgraph.model.graphmodel :refer :all]))
 
@@ -18,10 +19,25 @@
   (closeness g (first (get-nodes g)))
   (println "Init DB ok."))
 
-(defn init-example-graph-if-not-already []
-  (connect! :production)
+(defn init-example-graph-if-not-already [mode]
+  (connect! mode)
   (if (graph-exists? "nbexample")
     (reset! g (load-graph! "nbexample"))
     (do
       (reset! g (create-graph! "nbexample"))
       (populate-example-graph! @g))))
+
+;;; Request handlers ====================================================
+
+(defn all-nodes
+  ([]
+     (response (vec (get-all-nodes-details @g))))
+  ([rank limit]
+     (let [rank-keyword
+           (case rank
+             "closeness" :closeness)]
+       (response (get-all-nodes-details-ranked @g rank-keyword limit)))))
+
+(defn add-edge [n1 n2]
+  (create-edge! @g n1 n2)
+  "Edge created")

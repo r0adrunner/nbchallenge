@@ -8,7 +8,6 @@
 (declare distance-matrix-collection-ext-name)
 (declare set-scores-updated-status)
 (declare set-distance-matrix-updated-status)
-(declare node-exists?)
 (declare update-scores)
 
 ;;; MongoDB based graph implementation ===================================
@@ -20,6 +19,11 @@
               (mc/find-maps
                (nodes-collection-ext-name graph-name)
                {:id {"$exists" true}}))))
+
+  (node-exists? [this node]
+    (mc/find-one
+     (nodes-collection-ext-name graph-name)
+     {:id node}))
 
   (create-node-if-not-exists! [this node]
     ;; Don't do anything if node already exists
@@ -66,15 +70,25 @@
       (nodes-collection-ext-name graph-name)
       {:id node})))
 
-  (get-nodes-ranked
-    [this rank-type limit]
+  (get-all-nodes-details [this]
+    (update-scores this)
+    (set
+     (map
+      #(assoc (select-keys % [:id :neighbors :closeness]) :neighbors (set (:neighbors %)))
+      (mc/find-maps
+       (nodes-collection-ext-name graph-name)
+       {:id {"$exists" true}}))))
+
+  (get-all-nodes-details-ranked [this rank-type limit]
     (update-scores this)
     (vec
-     (map #(:id %)
+     (map
+      #(assoc (select-keys % [:id :neighbors :closeness]) :neighbors (set (:neighbors %)))
           (mq/with-collection (nodes-collection-ext-name graph-name)
             (mq/find {:id {"$exists" true}})
             (mq/sort { rank-type -1})
-            (mq/limit limit))))))
+            (mq/limit limit)))))
+  )
 
 ;;; DB collection names ==============================================
 
@@ -165,13 +179,6 @@
          (update-closeness g node closeness))))
     ;; Mark as updated
     (set-scores-updated-status g true)))
-
-;;; Graph manipulation fn's ==========================================
-
-(defn node-exists? [g node]
-  (mc/find-one
-   (nodes-collection-ext-name (:graph-name g))
-   {:id node}))
 
 ;;; Graph object ==============================================
 
