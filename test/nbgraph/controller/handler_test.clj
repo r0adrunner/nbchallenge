@@ -1,7 +1,7 @@
-(ns nbgraph.controller.controller-test
+(ns nbgraph.controller.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
-            [nbgraph.controller.controller :refer :all]))
+            [nbgraph.controller.handler :refer :all]))
 
 (deftest test-app
   (testing "main route"
