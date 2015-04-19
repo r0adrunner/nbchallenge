@@ -34,7 +34,7 @@
       (populate-example-graph! g))))
 
 (defroutes main-routes
-  (GET "/" [] "Hello")
+  (GET "/" [] "Server up")
   (route/resources "/")
   (route/not-found "Page not found"))
 
