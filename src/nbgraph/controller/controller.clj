@@ -8,12 +8,24 @@
 
 (declare init-example-graph-if-not-already)
 
+;;; Routes ===================================================================
+
+(defroutes main-routes
+  (GET "/" [] "Server up")
+  (route/resources "/")
+  (route/not-found "Page not found"))
+
+(def app
+  (wrap-defaults main-routes site-defaults))
+
+;;; Init function for the server =============================================
+
 (defn init
-  "Init function for the server"
   []
   (println "Initializing server...")
   (init-example-graph-if-not-already))
 
+;;; Model setup ==============================================================
 ;;; Load or populate for the first
 ;;; time the graph on the 'edges' example file
 
@@ -33,10 +45,3 @@
       (def g (create-graph! "nbexample"))
       (populate-example-graph! g))))
 
-(defroutes main-routes
-  (GET "/" [] "Server up")
-  (route/resources "/")
-  (route/not-found "Page not found"))
-
-(def app
-  (wrap-defaults main-routes site-defaults))
