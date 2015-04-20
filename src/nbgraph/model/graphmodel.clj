@@ -6,6 +6,8 @@
     "Creates 'node' if not already created")
   (get-nodes [graph]
     "Returns a set containing all the nodes of the graph")
+  (get-fraudulent-nodes [graph]
+    "Returns a set containing all the fraudulent nodes of the graph")
   (node-exists? [graph node]
     "Returns a boolean value indicating if the given node exists")
   (create-edge! [graph node1 node2]
@@ -14,9 +16,13 @@
     "Returns a collection with all the nodes that a given node connects to")
   (closeness [graph node]
     "Returns the closeness of the given node")
+  (score [graph node]
+    "Returns the score of the given node")
   (get-all-nodes-details [graph]
     "Returns a set of maps containing details of each node in the graph")
   (get-all-nodes-details-ranked [graph rank-type limit]
     "Returns a vector containing limit number of maps of graph nodes 
      details ranked by rank-type.
-     At the moment the supported rank-types are: :closeness"))
+     At the moment the supported rank-types are: :closeness and :score")
+  (set-fraudulent-status [graph node status]
+    "Marks a node as fraudulent or not based on boolean value status"))

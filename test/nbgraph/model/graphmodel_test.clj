@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [nbgraph.model.dbutils.mongodbconfig :refer :all]
             [nbgraph.model.mongograph :refer :all]
-            [nbgraph.model.graphmodel :refer :all])
+            [nbgraph.model.graphmodel :refer :all]
+            [nbgraph.model.graphutils :refer :all])
   (:import [nbgraph.model.mongograph MongoGraph]))
 
 (declare test-mongo)
@@ -42,22 +43,39 @@
     (is (= (neighbors @g "2") #{"4" "1" "5"}))
     (is (= (neighbors @g "3") #{"1"})))
 
+  (testing "Flagging a node as fraudulent"
+    (set-fraudulent-status @g "2" true)
+    (set-fraudulent-status @g "5" true)
+    (is (= (get-fraudulent-nodes @g) #{"2" "5"})))
+
   (testing "Closeness test"
     (is (= (closeness @g "2") 0.2))
     (is (= (closeness @g "5") 0.125)))
 
-  (testing "Nodes details test"
-    (is (= #{
-             {:closeness 0.125, :neighbors #{"2"}, :id "4"}
-             {:closeness 0.1111111111111111, :neighbors #{"1"}, :id "3"}
-             {:closeness 0.125, :neighbors #{"2"}, :id "5"}
-             {:closeness 0.1666666666666667, :neighbors #{"2" "3"}, :id "1"}
-             {:closeness 0.2, :neighbors #{"5" "4" "1"}, :id "2"}}
-           (get-all-nodes-details @g))))
+  (testing "Score test"
+    (is (= (score @g "2") 0))
+    (is (= (round (score @g "3")) 0.0729))
+    (is (= (round (score @g "1")) 0.0625))
+    (is (= (score @g "5") 0)))
 
-  (testing "Rank test"
-    (is (= [{:closeness 0.2, :neighbors #{"4" "1" "5"}, :id "2"}
-            {:closeness 0.1666666666666667, :neighbors #{"2" "3"}, :id "1"}
-            {:closeness 0.125, :neighbors #{"2"}, :id "4"}]
-           (get-all-nodes-details-ranked @g :closeness 3)))))
+  (testing "Nodes details test"
+    (is (=
+         #{{:score 0.0625, :closeness 0.1667, :neighbors #{"3" "2"}, :id "1", :is-fraudulent? false}
+           {:score 0, :closeness 0.125, :neighbors #{"2"}, :id "5", :is-fraudulent? true}
+           {:score 0.0729, :closeness 0.1111, :neighbors #{"1"}, :id "3", :is-fraudulent? false}
+           {:score 0.0469, :closeness 0.125, :neighbors #{"2"}, :id "4", :is-fraudulent? false}
+           {:score 0, :closeness 0.2, :neighbors #{"4" "5" "1"}, :id "2", :is-fraudulent? true}}
+         (get-all-nodes-details @g))))
+
+  (testing "Closeness rank test"
+    (is (= [{:score 0, :closeness 0.2, :neighbors #{"4" "5" "1"}, :id "2", :is-fraudulent? true}
+            {:score 0.0625, :closeness 0.1667, :neighbors #{"3" "2"}, :id "1", :is-fraudulent? false}
+            {:score 0.0469, :closeness 0.125, :neighbors #{"2"}, :id "4", :is-fraudulent? false}]
+           (get-all-nodes-details-ranked @g :closeness 3))))
+
+  (testing "Score rank test"
+    (is (= [{:score 0.0729, :closeness 0.1111, :neighbors #{"1"}, :id "3", :is-fraudulent? false}
+            {:score 0.0625, :closeness 0.1667, :neighbors #{"3" "2"}, :id "1", :is-fraudulent? false}
+            {:score 0.0469, :closeness 0.125, :neighbors #{"2"}, :id "4", :is-fraudulent? false}]
+           (get-all-nodes-details-ranked @g :score 3)))))
 

@@ -35,9 +35,20 @@
   ([rank limit]
      (let [rank-keyword
            (case rank
-             "closeness" :closeness)]
-       (response (get-all-nodes-details-ranked @g rank-keyword limit)))))
+             "closeness" :closeness
+             "score" :score
+             nil)]
+       (if (not= rank-keyword nil)
+         ;; 200 (Ok)
+         (response (get-all-nodes-details-ranked @g rank-keyword limit))
+         ;; 400 (bad request)
+         (status (response "Invalid rank type") 400)))))
 
 (defn add-edge [n1 n2]
   (create-edge! @g n1 n2)
-  "Edge created")
+  ;; 201 (created)
+  (status (response "Edge created") 201))
+
+(defn update-node [params]
+  (set-fraudulent-status @g (:id params) (= "true" (:is-fraudulent? params)))
+  (status (response "Marked!") 200))

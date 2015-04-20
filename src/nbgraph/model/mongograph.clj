@@ -20,6 +20,12 @@
                (nodes-collection-ext-name graph-name)
                {:id {"$exists" true}}))))
 
+  (get-fraudulent-nodes [this]
+    (set (map #(:id %)
+              (mc/find-maps
+               (nodes-collection-ext-name graph-name)
+               {:is-fraudulent? true}))))
+
   (node-exists? [this node]
     (mc/find-one
      (nodes-collection-ext-name graph-name)
@@ -30,7 +36,8 @@
     (when-not (node-exists? this node)
       (mc/insert
        (nodes-collection-ext-name graph-name)
-       {:id node :is-updated-in-distance-matrix false})
+       {:id node :is-updated-in-distance-matrix false
+        :is-fraudulent? false})
       ;; Adding one node changes the scores of all others
       (set-scores-updated-status this false)
       (set-distance-matrix-updated-status this false)))
@@ -70,11 +77,21 @@
       (nodes-collection-ext-name graph-name)
       {:id node})))
 
+  (score [this node]
+    (update-scores this)
+    (:score
+     (mc/find-one-as-map
+      (nodes-collection-ext-name graph-name)
+      {:id node})))
+
   (get-all-nodes-details [this]
     (update-scores this)
     (set
      (map
-      #(assoc (select-keys % [:id :neighbors :closeness]) :neighbors (set (:neighbors %)))
+      #(assoc (select-keys % [:id :neighbors :closeness :score :is-fraudulent?])
+         :neighbors (set (:neighbors %))
+         :score (round (:score %))
+         :closeness (round (:closeness %)))
       (mc/find-maps
        (nodes-collection-ext-name graph-name)
        {:id {"$exists" true}}))))
@@ -83,12 +100,22 @@
     (update-scores this)
     (vec
      (map
-      #(assoc (select-keys % [:id :neighbors :closeness]) :neighbors (set (:neighbors %)))
-          (mq/with-collection (nodes-collection-ext-name graph-name)
-            (mq/find {:id {"$exists" true}})
-            (mq/sort { rank-type -1})
-            (mq/limit limit)))))
-  )
+      #(assoc (select-keys % [:id :neighbors :closeness :score :is-fraudulent?])
+         :neighbors (set (:neighbors %))
+         :score (round (:score %))
+         :closeness (round (:closeness %)))
+      (mq/with-collection (nodes-collection-ext-name graph-name)
+        (mq/find {:id {"$exists" true}})
+        (mq/sort { rank-type -1})
+        (mq/limit limit)))))
+
+  (set-fraudulent-status [this node status]
+    (if (or (= status true) (= status false))
+      (mc/update (nodes-collection-ext-name graph-name)
+               {:id node}
+               {"$set" {:is-fraudulent? status}}
+               :upsert false)
+      (throw (IllegalArgumentException. (str "Invalid boolean value:" status))))))
 
 ;;; DB collection names ==============================================
 
@@ -157,26 +184,44 @@
     ;; Mark as updated
     (set-distance-matrix-updated-status g true)))
 
-(defn- distances-from [g node]
-  (map #(:distance %)
-       (mc/find-maps
-        (distance-matrix-collection-ext-name (:graph-name g))
-        {:from node})))
-
 (defn- update-closeness [g node closeness]
   (mc/update (nodes-collection-ext-name (:graph-name g))
              {:id node}
              {"$set" {:closeness closeness}}
              :upsert false))
 
+(defn- update-score [g node score]
+  (mc/update (nodes-collection-ext-name (:graph-name g))
+             {:id node}
+             {"$set" {:score score}}
+             :upsert false))
+
+(defn- position-data-from [g node]
+  (mc/find-maps
+   (distance-matrix-collection-ext-name (:graph-name g))
+   {:from node}))
+
 (defn- update-scores [g]
   (when-not (are-scores-updated? g)
     (update-matrix g)
-    (doall
-     (for [node (get-nodes g)]
-       (let [farness (reduce + (distances-from g node))
-             closeness (if (= 0 farness) 0 (/ 1 farness))]
-         (update-closeness g node closeness))))
+    (let [fraudulent-nodes (get-fraudulent-nodes g)]
+      (doall
+       (for [node (get-nodes g)]
+         (let [positions (position-data-from g node)
+               farness (reduce + (map #(:distance %) positions))
+               closeness (if (= 0 farness) 0 (/ 1 farness))
+               fraudulent-positions (filter
+                                     #(contains? fraudulent-nodes (:to %))
+                                     positions)
+               score (if (or (= 0 closeness)
+                             (contains? fraudulent-nodes node))
+                       0
+                       (* closeness
+                          (reduce *
+                                  (map #(- 1 (Math/pow 1/2 (:distance %)))
+                                       fraudulent-positions))))]
+           (update-closeness g node closeness)
+           (update-score g node score)))))
     ;; Mark as updated
     (set-scores-updated-status g true)))
 

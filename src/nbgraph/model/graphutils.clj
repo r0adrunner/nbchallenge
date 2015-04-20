@@ -17,3 +17,8 @@
                                    unvisited-neighbors))
                         (into (conj visited (:node node-info)) unvisited-neighbors)))))))
    (conj (clojure.lang.PersistentQueue/EMPTY) {:node start :distance 0}) #{}))
+
+(defn round [number]
+  (if (= number 0)
+    0
+    (double (/ (Math/round (* 10000 number)) 10000))))
