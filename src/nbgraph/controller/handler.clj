@@ -3,10 +3,11 @@
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.json :as middleware]
+            [ring.util.response :refer :all]
             [nbgraph.controller.graphcontroller :as graphcontroller]))
 
 (defroutes main-routes
-  (GET "/" [] "Server up")
+  (GET "/" [] (redirect "home.html"))
   (GET "/nodes" [] (graphcontroller/all-nodes))
   (GET "/nodes/rank-by/:rank/limit/:limit" [rank limit]
        (graphcontroller/all-nodes rank (Integer. limit)))
