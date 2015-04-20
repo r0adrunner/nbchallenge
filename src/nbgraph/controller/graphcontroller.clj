@@ -50,5 +50,11 @@
   (status (response "Edge created") 201))
 
 (defn update-node [params]
-  (set-fraudulent-status @g (:id params) (= "true" (:is-fraudulent? params)))
-  (status (response "Marked!") 200))
+  (if (node-exists? @g (:id params))
+    (do
+      (set-fraudulent-status @g (:id params) (= "true" (:isfraudulent params)))
+      (status (response {:message (str "Node " (:id params) " updated.")}) 200))
+    (status
+     (response {:errors {"errorNode" (str "Node " (:id params) " does not exist")}})
+     404)))
+

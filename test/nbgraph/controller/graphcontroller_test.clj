@@ -32,11 +32,11 @@
 
   (testing "Marking nodes as fraudulent"
     (let [response1 (app (mock/body
-                         (mock/request :put "/nodes")
-                         {:id 2 :is-fraudulent? true}))
+                         (mock/request :put "/node")
+                         {:id 2 :isfraudulent true}))
           response2 (app (mock/body
-                         (mock/request :put "/nodes")
-                         {:id 5 :is-fraudulent? true}))]
+                         (mock/request :put "/node")
+                         {:id 5 :isfraudulent true}))]
       (is (= (:status response1) 200))
       (is (= (:status response2) 200))))
 

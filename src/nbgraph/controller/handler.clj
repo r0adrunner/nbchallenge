@@ -13,7 +13,7 @@
        (graphcontroller/all-nodes rank (Integer. limit)))
   (POST "/edge" {nodes :params}
         (graphcontroller/add-edge (:node1 nodes) (:node2 nodes)))
-  (PUT "/nodes" {params :params}
+  (PUT "/node" {params :params}
         (graphcontroller/update-node params))
   (route/resources "/")
   (route/not-found "Page not found"))
