@@ -111,10 +111,13 @@
 
   (set-fraudulent-status [this node status]
     (if (or (= status true) (= status false))
-      (mc/update (nodes-collection-ext-name graph-name)
-               {:id node}
-               {"$set" {:is-fraudulent? status}}
-               :upsert false)
+      (do
+        (mc/update (nodes-collection-ext-name graph-name)
+                   {:id node}
+                   {"$set" {:is-fraudulent? status}}
+                   :upsert false)
+        (set-scores-updated-status this false)
+        (set-distance-matrix-updated-status this false))
       (throw (IllegalArgumentException. (str "Invalid boolean value:" status))))))
 
 ;;; DB collection names ==============================================
