@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.7.0/bootstrap-table.min.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.7.0/bootstrap-table.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.7.0/locale/bootstrap-table-en-US.min.js"></script>
+  </head>
+  <body>
+
+    <br>
+    <ul class="nav nav-pills">
+      <li role="presentation"><a href="home.html">Home</a></li>
+      <li role="presentation" class="active"><a href="viewgraph.html">View graph</a></li>
+      <li role="presentation"><a href="sortedgraphcloseness.html">View graph sorted by closeness</a></li>
+      <li role="presentation"><a href="sortedgraphscore.html">View graph sorted by score</a></li>
+      <li role="presentation"><a href="addedge.html">Add edge</a></li>
+      <li role="presentation"><a href="flagnode.html">Flag fraudulent node</a></li>
+    </ul>
+    <br>
+
+    <table data-toggle="table"
+	   data-url="http://localhost:3000/nodes">
+      <thead>
+	<tr>
+          <th data-field="id">Node id</th>
+          <th data-field="score">Score</th>
+          <th data-field="closeness">Closeness</th>
+          <th data-field="neighbors">Neighbors</th>
+          <th data-field="is-fraudulent?">Fraudulent?</th>
+	</tr>
+      </thead>
+    </table>
+    
+  </body>
+</html>

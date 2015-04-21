@@ -27,6 +27,17 @@
       (reset! g (create-graph! "nbexample"))
       (populate-example-graph! @g))))
 
+(defn- reset-example-graph [mode]
+  (connect! mode)
+  (if (graph-exists? "nbexample")
+    (do
+      (delete-graph! (load-graph! "nbexample"))
+      (reset! g (create-graph! "nbexample"))
+      (populate-example-graph! @g))
+    (do
+      (reset! g (create-graph! "nbexample"))
+      (populate-example-graph! @g))))
+
 ;;; Request handlers ====================================================
 
 (defn all-nodes
@@ -45,9 +56,34 @@
          (status (response "Invalid rank type") 400)))))
 
 (defn add-edge [n1 n2]
-  (create-edge! @g n1 n2)
-  ;; 201 (created)
-  (status (response "Edge created") 201))
+  (cond
+   ;; Empty nodes
+   (or (empty? n1) (empty? n2))
+   (status (response
+            {:errors {"errorNode1" (if (empty? n1) "Node is empty" "")
+                      "errorNode2" (if (empty? n2) "Node is empty" "")}})
+           404)
+
+   ;; Same nodes
+   (= n1 n2)
+   (status (response
+            {:message "Same nodes. It is not an edge!"})
+           404)
+
+   ;; Creating a disconnected graph? No!
+   (and (not (node-exists? @g n1))
+        (not (node-exists? @g n2)))
+   (status (response
+            {:message "Cannot create disconnected graph..."})
+           404)
+
+   ;; No errors
+   :else
+   (do
+     (create-edge! @g n1 n2)
+     ;; 201 (created)
+     (status (response {:message (str "Edge " n1 " - " n2 " created.")})
+             201))))
 
 (defn update-node [params]
   (if (node-exists? @g (:id params))
@@ -55,6 +91,6 @@
       (set-fraudulent-status @g (:id params) (= "true" (:isfraudulent params)))
       (status (response {:message (str "Node " (:id params) " updated.")}) 200))
     (status
-     (response {:errors {"errorNode" (str "Node " (:id params) " does not exist")}})
+     (response {:errors {"errorNode" (str (:id params) " does not exist.")}})
      404)))
 

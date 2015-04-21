@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+    <script src="flagnodeform.js"></script>
+
+  </head>
+  <body ng-app="formApp" ng-controller="formController">
+
+    <br>
+    <ul class="nav nav-pills">
+      <li role="presentation"><a href="home.html">Home</a></li>
+      <li role="presentation"><a href="viewgraph.html">View graph</a></li>
+      <li role="presentation"><a href="sortedgraphcloseness.html">View graph sorted by closeness</a></li>
+      <li role="presentation"><a href="sortedgraphscore.html">View graph sorted by score</a></li>
+      <li role="presentation"><a href="addedge.html">Add edge</a></li>
+      <li role="presentation" class="active" ><a href="flagnode.html">Flag fraudulent node</a></li>
+    </ul>
+    <br>
+
+    <form class="form-inline" ng-submit="processForm()">
+      <div class="form-group" ng-class="{ 'has-error' : errorNode }">
+	<label>Node to flag as fraudulent:</label>
+	<input type="text" name="node" class="form-control" ng-model="formData.id">
+	<input type="hidden" name="someData" ng-value="data" ng-model="formData.isfraud" />
+      </div>
+      <div class="form-group">
+	<!-- <input type="hidden" name="fraudulent" class="form-control" ng-model="formData.isfraudulent" value="true"> -->
+      </div>
+      <button type="submit" class="btn btn-default">Flag node</button>
+    </form>
+
+    <div class="has-error">
+      <span class="help-block" ng-show="errorNode">Node: {{ errorNode }}</span>
+    </div>
+    <div id="messages" ng-show="message">{{ message }}</div>
+
+  </body>
+</html>

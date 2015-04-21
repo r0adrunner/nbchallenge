@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+    <script src="addedgeform.js"></script>
+
+  </head>
+  <body ng-app="formApp" ng-controller="formController">
+
+    <br>
+    <ul class="nav nav-pills">
+      <li role="presentation"><a href="home.html">Home</a></li>
+      <li role="presentation"><a href="viewgraph.html">View graph</a></li>
+      <li role="presentation"><a href="sortedgraphcloseness.html">View graph sorted by closeness</a></li>
+      <li role="presentation"><a href="sortedgraphscore.html">View graph sorted by score</a></li>
+      <li role="presentation" class="active" ><a href="addedge.html">Add edge</a></li>
+      <li role="presentation"><a href="flagnode.html">Flag fraudulent node</a></li>
+    </ul>
+    <br>
+
+    <form class="form-inline" ng-submit="processForm()">
+      <div class="form-group" ng-class="{ 'has-error' : errorNode1 }">
+	<label>Node 1</label>
+	<input type="text" name="node2" class="form-control" ng-model="formData.node1">
+      </div>
+      <div class="form-group" ng-class="{ 'has-error' : errorNode2 }">
+	<label>Node 2</label>
+	<input type="text" name="node2" class="form-control" ng-model="formData.node2">
+      </div>
+      <button type="submit" class="btn btn-default">Add edge</button>
+    </form>
+
+    <div class="has-error">
+      <span class="help-block" ng-show="errorNode1">Node 1: {{ errorNode1 }}</span>
+      <span class="help-block" ng-show="errorNode2">Node 2: {{ errorNode2 }}</span> 
+    </div>
+    <div id="messages" ng-show="message">{{ message }}</div>
+
+  </body>
+</html>
